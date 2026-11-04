@@ -7,6 +7,8 @@
 1. **左侧面板列表不再吃掉整个侧栏** —— 默认只显示 4 行（学习 / 插件 / 插件市场 / 自动化任务…），剩下的用滚轮滑出来，「工作区」往上升、会话列表多露几条。
 2. **右侧栏不再裁掉内容** —— 右栏里凡是"内容比盒子高、却被 `overflow: hidden/clip` 切掉"的容器，改成可以上下滚动。
 
+变更记录见 [CHANGELOG.md](CHANGELOG.md)，最近一版的说明见 [v0.2.4 release notes](docs/release-notes/v0.2.4.md)。
+
 ![左侧：4 行封顶 + 滚动](docs/left-panel.png)
 
 ![右侧：滑到底能看到原本够不到的项](docs/right-panel.png)

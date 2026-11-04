@@ -17,6 +17,7 @@ const REQUIRED = [
   'package.json',
   'README.md',
   'LICENSE',
+  'CHANGELOG.md',
   'client.js',
   'index.js',
   'cordis.patch.yml',
