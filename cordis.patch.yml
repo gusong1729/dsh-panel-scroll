@@ -1,0 +1,7 @@
+# dsh-panel-scroll bundle patch
+#
+# One row: the plugin has a host half (index.js, no-op) and a client half
+# (client.js) that caps the sidebar panel list at 4 rows and makes it scroll.
+- insert:
+    - id: panel-scroll
+      name: 'dsh-panel-scroll'

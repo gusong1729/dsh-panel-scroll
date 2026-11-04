@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>dsh-panel-scroll harness</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font: 13px/1.4 "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; height: 100vh; background: #10161f; color: #e8edf4; }
+  .app { display: flex; flex: 1; min-width: 0; min-height: 0; }
+  /* ---- left sidebar: mirrors the real shell skeleton ---- */
+  .wtg9ga_root { width: 260px; display: flex; flex-direction: column; padding: 8px; gap: 6px;
+                 background: #16202b; border-right: 1px solid #24303f; min-height: 0; }
+  .wtg9ga_logoRow { height: 40px; background: #1d2a38; border-radius: 6px; }
+  .wtg9ga_newSession { height: 38px; border: 0; border-radius: 6px; background: #223449; color: #cfe3ff; }
+  .lks14-sidebar-row { height: 32px; border: 0; border-radius: 6px; background: #1c2836; color: #cfe3ff; }
+  .wtg9ga_panelList { display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+  .wtg9ga_panelRow { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 8px;
+                     border: 0; border-radius: 6px; background: #1b2531; color: #dbe6f2; width: 100%; }
+  .wtg9ga_panelGlyph { display: inline-flex; }
+  .wtg9ga_regionArea { flex: 1; min-height: 0; overflow: auto; background: #141d27; border-radius: 6px;
+                       padding: 8px; color: #8fa6bf; }
+  .wtg9ga_footArea { height: 60px; background: #141d27; border-radius: 6px; }
+  /* ---- center ---- */
+  .main { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; color: #4d6478; }
+  /* ---- right column: the structure observed in the real shell ---- */
+  .mP3x-q_rightbarCol { width: 360px; height: 100vh; display: flex; flex-direction: row;
+                        border-left: 1px solid #24303f; background: #16202b; }
+  .acoR2W_panel { flex: 1; display: flex; flex-direction: column; overflow: clip; min-height: 0; }
+  ._tabHostBody { flex: 1; display: flex; flex-direction: row; overflow-y: auto; min-height: 0; }
+  .acoR2W_tabBody { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  /* reproduce the reported bug: the guide is centred, so its excess height leaks
+     ABOVE the container top — outside scrollHeight, unreachable by any scroll */
+  .p2k40q_guide { display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 0; }
+  .card { height: 58px; margin: 4px 8px; flex: 0 0 auto; border-radius: 8px; background: #22313f;
+          display: flex; align-items: center; padding: 0 12px; color: #cfe0f0; }
+  #report { position: fixed; left: 8px; bottom: 8px; right: 8px; padding: 8px 10px; border-radius: 8px;
+            background: #0b1017ee; border: 1px solid #2b3a4c; font: 12px/1.5 Consolas, monospace;
+            color: #a8ffb0; white-space: pre-wrap; z-index: 9; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="wtg9ga_root" id="sidebar">
+    <div class="wtg9ga_logoRow"></div>
+    <button class="wtg9ga_newSession">新会话</button>
+    <button class="lks14-sidebar-row">学习</button>
+    <nav class="wtg9ga_panelList" id="panelList"></nav>
+    <div class="wtg9ga_regionArea" id="region">工作区（这里应该被抬升、露出更多行）</div>
+    <div class="wtg9ga_footArea"></div>
+  </div>
+  <div class="main">主区</div>
+  <div class="mP3x-q_rightbarCol" id="rightCol">
+    <div class="acoR2W_panel">
+      <div class="_tabHostBody">
+        <div class="acoR2W_tabBody" id="tabBody">
+          <div class="p2k40q_guide" id="guide"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="report">running…</div>
+
+<script>
+  // ---- 1. build the shell skeleton -------------------------------------
+  const NAMES = ['插件', '插件市场', '自动化任务', '灵枢', '上下文洞察', '任务看板', '技能中心', '更多']
+  const list = document.getElementById('panelList')
+  for (const name of NAMES) {
+    const row = document.createElement('button')
+    row.className = 'wtg9ga_panelRow'
+    const glyph = document.createElement('span')
+    glyph.className = 'wtg9ga_panelGlyph'
+    glyph.textContent = '◆'
+    const label = document.createElement('span')
+    label.textContent = name
+    row.append(glyph, label)
+    list.append(row)
+  }
+
+  const tabBody = document.getElementById('tabBody')
+  const guide = document.getElementById('guide')
+  // ?end → also exercise the flex-end variant (the default is centred)
+  if (location.search.includes('end')) guide.style.justifyContent = 'flex-end'
+  for (let i = 1; i <= 30; i += 1) {
+    const card = document.createElement('div')
+    card.className = 'card'
+    card.textContent = `面板内容 ${i}`
+    guide.append(card)
+  }
+
+  // ---- 2. loader stub + fake React -------------------------------------
+  window.__ModuleLoader__ = { load(def) { window.__def = def } }
+
+  const pendingEffects = []
+  const ReactStub = {
+    createElement(tag, props) {
+      if (typeof tag === 'function') return tag(props || {})
+      const el = document.createElement(tag)
+      if (props) {
+        if (props.style) Object.assign(el.style, props.style)
+        if (props['aria-hidden']) el.setAttribute('aria-hidden', String(props['aria-hidden']))
+        if (props.ref) el.__ref = props.ref
+      }
+      return el
+    },
+    useRef: () => ({ current: null }),
+    useLayoutEffect: (fn) => { pendingEffects.push(fn) },
+  }
+
+  const report = document.getElementById('report')
+  const lines = []
+  const log = (line) => { lines.push(line); report.textContent = lines.join('\n') }
+
+  // ---- 3. load the real client.js, then run it -------------------------
+  const script = document.createElement('script')
+  script.src = '../client.js'
+  script.onload = () => {
+    try {
+      const def = window.__def
+      if (!def || def.id !== 'dsh-panel-scroll') throw new Error('client.js did not register')
+      const client = def.factory(() => ReactStub)
+
+      let registered = null
+      const ctx = {
+        effect(fn) { return fn() },
+        slots: {
+          inject(key, cb) { return cb() },
+          register(options, component) { registered = { options, component }; return () => {} },
+        },
+      }
+      client.apply(ctx)
+      log(`apply() ok · injects=${JSON.stringify(client.inject)} · slotId=${registered.options.id}`)
+
+      // mount the marker the way the shell does: button > glyph > contents > marker
+      const markerRow = document.createElement('button')
+      markerRow.className = 'wtg9ga_panelRow'
+      const glyph = document.createElement('span')
+      glyph.className = 'wtg9ga_panelGlyph'
+      const contents = document.createElement('div')
+      contents.style.display = 'contents'
+      glyph.append(contents)
+      const label = document.createElement('span')
+      label.textContent = ''
+      markerRow.append(glyph, label)
+      list.append(markerRow)
+
+      const node = registered.component()
+      contents.append(node)
+      if (node.__ref) node.__ref.current = node
+      for (const fn of pendingEffects) fn()
+
+      // ---- 4. measure ---------------------------------------------------
+      const nav = document.getElementById('panelList')
+      const navStyle = getComputedStyle(nav)
+      const pitch = 38
+      const visible = Math.round(parseFloat(navStyle.maxHeight) / pitch)
+      log(`left: maxHeight=${navStyle.maxHeight} · visibleRows≈${visible} · scroll=${nav.scrollHeight}/${nav.clientHeight}`)
+      log(`left: markerRow hidden=${markerRow.style.display === 'none'} · rows still in list=${nav.children.length}`)
+
+      const tb = document.getElementById('tabBody')
+      const gd = document.getElementById('guide')
+      tb.scrollTop = 0
+      const firstCard = gd.firstElementChild
+      const firstTop = Math.round(firstCard.getBoundingClientRect().top)
+      const guideTop = Math.round(gd.getBoundingClientRect().top)
+      const boxTop = Math.round(tb.getBoundingClientRect().top)
+      const startOver = firstTop < guideTop - 2
+      const firstReachable = firstTop >= boxTop - 1
+      log(`right: tabBody class="${tb.className}" · overflowY=${getComputedStyle(tb).overflowY} · scroll=${tb.scrollHeight}/${tb.clientHeight}`)
+      log(`right: guide justify=${getComputedStyle(gd).justifyContent} · startOverflow=${startOver} · class="${gd.className}"`)
+      log(`right: scrollTop=0 → first card top=${firstTop} vs container top=${boxTop} · reachable=${firstReachable}`)
+
+      const region = document.getElementById('region').getBoundingClientRect()
+      log(`left: 工作区 top=${Math.round(region.top)}px (未封顶时约 ${8 + 40 + 6 + 38 + 6 + 32 + 6 + 8 * 38}px)`)
+
+      const ok =
+        markerRow.style.display === 'none' &&
+        visible === 4 &&
+        getComputedStyle(tb).overflowY === 'auto' &&
+        !startOver &&
+        firstReachable
+      log(ok ? 'HARNESS PASS' : 'HARNESS FAIL')
+    } catch (error) {
+      log(`HARNESS ERROR: ${error.message}`)
+    }
+  }
+  script.onerror = () => log('HARNESS ERROR: client.js failed to load')
+  document.head.append(script)
+</script>
+</body>
+</html>

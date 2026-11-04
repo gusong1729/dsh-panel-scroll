@@ -1,0 +1,59 @@
+{
+  "name": "dsh-panel-scroll",
+  "version": "0.2.4",
+  "description": "DeepSeek Harness 侧栏滚动补丁：左侧面板列表固定 4 行、可滚动，右侧栏被裁掉的内容改为可滚 / Make the DSH sidebar panel list scroll instead of eating the window, and un-clip overflowing right-column panels.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "icon": "icon.svg",
+  "license": "MIT",
+  "author": "gusong1729",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gusong1729/dsh-panel-scroll.git"
+  },
+  "homepage": "https://github.com/gusong1729/dsh-panel-scroll#readme",
+  "bugs": {
+    "url": "https://github.com/gusong1729/dsh-panel-scroll/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "sidebar",
+    "layout",
+    "scroll"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node tests/smoke.mjs"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "docs/*.png"
+  ],
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.1-rc.2 <0.3.0"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  }
+}

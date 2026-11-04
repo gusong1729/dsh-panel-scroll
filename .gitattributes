@@ -1,0 +1,6 @@
+# Normalize everything to LF so the repo is diff-clean on Windows checkouts.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
