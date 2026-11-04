@@ -1,5 +1,7 @@
 # dsh-panel-scroll
 
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 给 **DeepSeek Harness**（DSH）Web / Desktop 界面打的一个小布局补丁：
 
 1. **左侧面板列表不再吃掉整个侧栏** —— 默认只显示 4 行（学习 / 插件 / 插件市场 / 自动化任务…），剩下的用滚轮滑出来，「工作区」往上升、会话列表多露几条。
@@ -64,7 +66,7 @@ location.reload()
 - 注册的标记项 `label` 为空，会出现在面板列表的"更多"菜单/无障碍树里（一个空项）。
 - 面板少于 2 个时左侧封顶逻辑不生效（没有兄弟行可判定）。
 - 高度 **小于 60px** 的被裁容器不处理（阈值内是滚动条比内容还高的区域，修了反而更糟）。
-- 客户端逻辑是**热加载**的：改完 `client.js` 保存即生效，不用重启 DSH。
+- 开发时改完 `client.js`，**刷新页面**即可生效，不需要重启 DSH（客户端模块在页面加载时重新装载）。
 
 ## 卸载
 
@@ -112,11 +114,14 @@ msedge --headless=new --disable-gpu --window-size=1400,900 \
 
 ```bash
 gh auth login                      # 一次性
-node scripts/push-api.mjs          # 推 main
-node scripts/push-api.mjs feat/x   # 推其他分支
+node scripts/push-api.mjs --dry-run  # 先看会推什么（文件/mode/父提交）
+node scripts/push-api.mjs            # 推 main
+node scripts/push-api.mjs feat/x     # 推其他分支
 ```
 
-它用相同的 blob / tree / 作者与提交时间重建提交，因此**产出的 SHA 与本地 HEAD 完全一致**（脚本会断言，不一致就退出）。
+它用相同的 blob / tree / **文件 mode** / 父提交 / 作者与提交时间重建提交，因此**产出的 SHA 与本地 HEAD 完全一致**（脚本会断言，不一致就退出，不会写坏远端）。
+
+> 推送涉及 `.github/workflows/` 时需要额外的 `workflow` scope：`gh auth refresh -h github.com -s workflow`。没有这个 scope 时 GitHub 会返回 **404**（而不是 403），看起来像"文件不存在"。
 
 ## License
 
